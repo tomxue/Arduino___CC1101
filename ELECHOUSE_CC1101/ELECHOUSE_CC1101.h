@@ -13,7 +13,11 @@
 #ifndef ELECHOUSE_CC1101_h
 #define ELECHOUSE_CC1101_h
 
-#include "WProgram.h"
+#if defined(ARDUINO) && ARDUINO >= 100
+  #include "Arduino.h"
+#else
+  #include "WProgram.h"
+#endif 
 //***************************************CC1101 define**************************************************//
 // CC1101 CONFIG REGSITER
 #define CC1101_IOCFG2       0x00        // GDO2 output pin configuration
@@ -124,12 +128,12 @@ class ELECHOUSE_CC1101
 		void Reset (void);
 		void SpiWriteReg(byte addr, byte value);
 		void SpiWriteBurstReg(byte addr, byte *buffer, byte num);
-		void SpiStrobe(byte strobe);
-		byte SpiReadReg(byte addr);
+		void SpiStrobe(byte strobe);		
 		void SpiReadBurstReg(byte addr, byte *buffer, byte num);
 		byte SpiReadStatus(byte addr);
 		void RegConfigSettings(void);
 	public:
+		byte SpiReadReg(byte addr);
 		void Init(void);
 		void SendData(byte *txBuffer, byte size);
 		void SetReceive(void);
