@@ -68,9 +68,9 @@ void ELECHOUSE_CC1101::SpiMode(byte config)
 ****************************************************************/
 byte ELECHOUSE_CC1101::SpiTransfer(byte value)
 {
-  SPDR = value;
+  SPDR = value; // write uses this value, by tomxue
   while (!(SPSR & (1<<SPIF))) ;
-  return SPDR;
+  return SPDR;  // read uses the return value, by tomxue
 }
 
 /****************************************************************
@@ -88,6 +88,7 @@ void ELECHOUSE_CC1101::GDO_Set (void)
 /****************************************************************
 *FUNCTION NAME:Reset
 *FUNCTION     :CC1101 reset //details refer datasheet of CC1101/CC1100//
+page 51, Figure 27, by tomxue
 *INPUT        :none
 *OUTPUT       :none
 ****************************************************************/
@@ -270,6 +271,7 @@ void ELECHOUSE_CC1101::RegConfigSettings(void)
     SpiWriteReg(CC1101_TEST2,    0x81);
     SpiWriteReg(CC1101_TEST1,    0x35);
     SpiWriteReg(CC1101_TEST0,    0x09);
+    // below register settings are important to understand the code, by tomxue
     SpiWriteReg(CC1101_IOCFG2,   0x0B); 	//serial clock.synchronous to the data in synchronous serial mode
     SpiWriteReg(CC1101_IOCFG0,   0x06);  	//asserts when sync word has been sent/received, and de-asserts at the end of the packet 
     SpiWriteReg(CC1101_PKTCTRL1, 0x04);		//two status bytes will be appended to the payload of the packet,including RSSI LQI and CRC OK
@@ -290,6 +292,7 @@ void ELECHOUSE_CC1101::SendData(byte *txBuffer,byte size)
 	SpiWriteReg(CC1101_TXFIFO,size);
 	SpiWriteBurstReg(CC1101_TXFIFO,txBuffer,size);			//write data to send
 	SpiStrobe(CC1101_STX);									//start send	
+    // tomxue: check above GDO0 settings
     while (!digitalRead(GDO0));								// Wait for GDO0 to be set -> sync transmitted  
     while (digitalRead(GDO0));								// Wait for GDO0 to be cleared -> end of packet
 	SpiStrobe(CC1101_SFTX);									//flush TXfifo
@@ -339,9 +342,9 @@ byte ELECHOUSE_CC1101::ReceiveData(byte *rxBuffer)
 
 	if(SpiReadStatus(CC1101_RXBYTES) & BYTES_IN_RXFIFO)
 	{
-		size=SpiReadReg(CC1101_RXFIFO);
+		size=SpiReadReg(CC1101_RXFIFO); // page 31, by tomxue
 		SpiReadBurstReg(CC1101_RXFIFO,rxBuffer,size);
-		SpiReadBurstReg(CC1101_RXFIFO,status,2);
+		SpiReadBurstReg(CC1101_RXFIFO,status,2);    // tomxue: check above CC1101_PKTCTRL1 register setting
 		SpiStrobe(CC1101_SFRX);
 		return size;
 	}
@@ -354,7 +357,3 @@ byte ELECHOUSE_CC1101::ReceiveData(byte *rxBuffer)
 }
 
 ELECHOUSE_CC1101 ELECHOUSE_cc1101;
-
-
-
-
